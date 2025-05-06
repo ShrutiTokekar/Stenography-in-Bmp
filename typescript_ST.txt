@@ -1,0 +1,150 @@
+Script started on 2025-04-30 22:19:47-04:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="80" LINES="24"]
+]777;notify;Command completed;diff -s stegno.txt nVidia-openACC.txt\]777;precmd\]0;liveuser@localhost-live:~/CPSC340/fileManipulation\]7;file://localhost-live/home/liveuser/CPSC340/fileManipulation\[?2004h[liveuser@localhost-live fileManipulation]$ gcc hide.c[K[K[K[K[K[K[K[K[K[Kgedi[K[K[K[Kdiff -s stegno.txt nVidia-openACC.txt[A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C./decode[K
+[K[A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Cencodegcc extract.c -o decode[3Phide.c -o encodels[Kgcc hide.c -o encodeextract.c -o decode[15P./encodedecodediff -s stegno.txt nVidia-openACC.txt[A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[K
+[K[A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Cgedit hide.c
+[?2004l]777;preexec\]777;notify;Command completed;gedit hide.c\]777;precmd\]0;liveuser@localhost-live:~/CPSC340/fileManipulation\]7;file://localhost-live/home/liveuser/CPSC340/fileManipulation\[?2004h[liveuser@localhost-live fileManipulation]$ gei[Kdit extract.c
+[?2004l]777;preexec\]777;notify;Command completed;gedit extract.c\]777;precmd\]0;liveuser@localhost-live:~/CPSC340/fileManipulation\]7;file://localhost-live/home/liveuser/CPSC340/fileManipulation\[?2004h[liveuser@localhost-live fileManipulation]$ car hide.c
+[?2004l]777;preexec\bash: car: command not found...
+]777;notify;Command completed;car hide.c\]777;precmd\]0;liveuser@localhost-live:~/CPSC340/fileManipulation\]7;file://localhost-live/home/liveuser/CPSC340/fileManipulation\[?2004h[liveuser@localhost-live fileManipulation]$ car hide.c[1P hide.ct hide.c
+[?2004l]777;preexec\#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#define BMP_HEADER_SIZE 54
+#define BMP_INPUT "Santorini.bmp"
+#define TEXT_INPUT "nVidia-openACC.txt"
+#define BMP_OUTPUT "santorini-stega.bmp"
+#define PERMS 0644
+
+// Helper to print error and exit
+void fail(const char *msg) {
+    perror(msg);
+    exit(EXIT_FAILURE);
+}
+
+// Write one bit of `bitval` into LSB of `byte`
+unsigned char insert_bit(unsigned char byte, int bitval) {
+    return (byte & 0xFE) | (bitval & 0x01);
+}
+
+int main() {
+    // Read entire text file into buffer
+    FILE *txt = fopen(TEXT_INPUT, "rb");
+    if (!txt) fail("Opening text file");
+
+    fseek(txt, 0, SEEK_END);
+    long txt_size = ftell(txt);
+    fseek(txt, 0, SEEK_SET);
+
+    char *text = malloc(txt_size + 1);
+    if (!text) fail("Memory allocation");
+
+    fread(text, 1, txt_size, txt);
+    fclose(txt);
+    text[txt_size] = '\0';  // Ensure null termination
+
+    // Open BMP files
+    int in_bmp = open(BMP_INPUT, O_RDONLY);
+    if (in_bmp < 0) fail("Opening input BMP");
+
+    int out_bmp = open(BMP_OUTPUT, O_WRONLY | O_CREAT | O_TRUNC, PERMS);
+    if (out_bmp < 0) fail("Creating output BMP");
+
+    // Copy BMP header
+    char header[BMP_HEADER_SIZE];
+    if (read(in_bmp, header, BMP_HEADER_SIZE) != BMP_HEADER_SIZE)
+        fail("Reading BMP header");
+    write(out_bmp, header, BMP_HEADER_SIZE);
+
+    // Embed each bit of each character (including null)
+    int char_idx = 0, bit_idx = 7;
+    unsigned char bmp_byte;
+    while (read(in_bmp, &bmp_byte, 1) == 1) {
+        if (char_idx <= txt_size) {
+            unsigned char current = text[char_idx];
+            int bit = (current >> bit_idx) & 1;
+            bmp_byte = insert_bit(bmp_byte, bit);
+            bit_idx--;
+            if (bit_idx < 0) {
+                bit_idx = 7;
+                char_idx++;
+            }
+        }
+        write(out_bmp, &bmp_byte, 1);
+    }
+
+    close(in_bmp);
+    close(out_bmp);
+    free(text);
+    return 0;
+}
+
+]777;notify;Command completed;cat hide.c\]777;precmd\]0;liveuser@localhost-live:~/CPSC340/fileManipulation\]7;file://localhost-live/home/liveuser/CPSC340/fileManipulation\[?2004h[liveuser@localhost-live fileManipulation]$ cat extract.c
+[?2004l]777;preexec\#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#define BMP_HEADER_SIZE 54
+#define BMP_INPUT "santorini-stega.bmp"
+#define TEXT_OUTPUT "stegno.txt"
+#define PERMS 0644
+
+// Helper to print error and exit
+void fail(const char *msg) {
+    perror(msg);
+    exit(EXIT_FAILURE);
+}
+
+int main() {
+    int bmp = open(BMP_INPUT, O_RDONLY);
+    if (bmp < 0) fail("Opening stego BMP");
+
+    int out = open(TEXT_OUTPUT, O_WRONLY | O_CREAT | O_TRUNC, PERMS);
+    if (out < 0) fail("Creating output text file");
+
+    // Skip header
+    if (lseek(bmp, BMP_HEADER_SIZE, SEEK_SET) != BMP_HEADER_SIZE)
+        fail("Seeking BMP content");
+
+    unsigned char bmp_byte;
+    unsigned char current_char = 0;
+    int bit_count = 0;
+
+    while (read(bmp, &bmp_byte, 1) == 1) {
+        int lsb = bmp_byte & 1;
+        current_char = (current_char << 1) | lsb;
+        bit_count++;
+
+        if (bit_count == 8) {
+            if (current_char == '\0') break;
+            write(out, &current_char, 1);
+            current_char = 0;
+            bit_count = 0;
+        }
+    }
+
+    close(bmp);
+    close(out);
+    return 0;
+}
+
+
+]777;notify;Command completed;cat extract.c\]777;precmd\]0;liveuser@localhost-live:~/CPSC340/fileManipulation\]7;file://localhost-live/home/liveuser/CPSC340/fileManipulation\[?2004h[liveuser@localhost-live fileManipulation]$ ls
+[?2004l]777;preexec\extract.c  nVidia.hex          [0m[01;35mSantorini.bmp[0m  typescript_ST.txt
+hide.c     nVidia-openACC.txt  stegno.hex
+]777;notify;Command completed;ls\]777;precmd\]0;liveuser@localhost-live:~/CPSC340/fileManipulation\]7;file://localhost-live/home/liveuser/CPSC340/fileManipulation\[?2004h[liveuser@localhost-live fileManipulation]$ gcc hide.c -o end[Kcode
+[?2004l]777;preexec\]777;notify;Command completed;gcc hide.c -o encode\]777;precmd\]0;liveuser@localhost-live:~/CPSC340/fileManipulation\]7;file://localhost-live/home/liveuser/CPSC340/fileManipulation\[?2004h[liveuser@localhost-live fileManipulation]$ gd[Kcc extract.c -o decode
+[?2004l]777;preexec\]777;notify;Command completed;gcc extract.c -o decode\]777;precmd\]0;liveuser@localhost-live:~/CPSC340/fileManipulation\]7;file://localhost-live/home/liveuser/CPSC340/fileManipulation\[?2004h[liveuser@localhost-live fileManipulation]$ ./encode
+[?2004l]777;preexec\]777;notify;Command completed;./encode\]777;precmd\]0;liveuser@localhost-live:~/CPSC340/fileManipulation\]7;file://localhost-live/home/liveuser/CPSC340/fileManipulation\[?2004h[liveuser@localhost-live fileManipulation]$ ./decode
+[?2004l]777;preexec\]777;notify;Command completed;./decode\]777;precmd\]0;liveuser@localhost-live:~/CPSC340/fileManipulation\]7;file://localhost-live/home/liveuser/CPSC340/fileManipulation\[?2004h[liveuser@localhost-live fileManipulation]$ diff -s stegno[K[K[K[K[K[K[K[K[K[K[K[K[K[Kls
+[?2004l]777;preexec\[0m[01;32mdecode[0m     hide.c              [01;35mSantorini.bmp[0m        stegno.txt
+[01;32mencode[0m     nVidia.hex          [01;35msantorini-stega.bmp[0m  typescript_ST.txt
+extract.c  nVidia-openACC.txt  stegno.hex
+]777;notify;Command completed;ls\]777;precmd\]0;liveuser@localhost-live:~/CPSC340/fileManipulation\]7;file://localhost-live/home/liveuser/CPSC340/fileManipulation\[?2004h[liveuser@localhost-live fileManipulation]$ ste[K[K[Kdiff -s stegno.txt nVidia-openACC.tx t
+[?2004l]777;preexec\Files stegno.txt and nVidia-openACC.txt are identical
+]777;notify;Command completed;diff -s stegno.txt nVidia-openACC.txt\]777;precmd\]0;liveuser@localhost-live:~/CPSC340/fileManipulation\]7;file://localhost-live/home/liveuser/CPSC340/fileManipulation\[?2004h[liveuser@localhost-live fileManipulation]$ exit
+[?2004l]777;preexec\exit
+
+Script done on 2025-04-30 22:22:54-04:00 [COMMAND_EXIT_CODE="0"]
